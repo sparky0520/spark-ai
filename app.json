@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "spark-ai2",
-    "slug": "spark-ai2",
+    "name": "Spark AI",
+    "slug": "spark-ai",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "spark-ai",
     "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/images/splash.png",
