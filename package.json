@@ -1,9 +1,9 @@
 {
-  "name": "spark-ai",
   "main": "expo-router/entry",
-  "version": "1.0.0",
   "scripts": {
     "start": "expo start",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -11,11 +11,18 @@
     "test": "jest --watchAll",
     "lint": "expo lint"
   },
+  "name": "spark-ai",
+  "version": "1.0.0",
   "jest": {
     "preset": "jest-expo"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.0.2",
+    "@genkit-ai/ai": "^0.5.13",
+    "@genkit-ai/core": "^0.5.13",
+    "@genkit-ai/dotprompt": "^0.5.13",
+    "@genkit-ai/flow": "^0.5.13",
+    "@genkit-ai/googleai": "^0.5.13",
     "@react-native-async-storage/async-storage": "^2.0.0",
     "@react-navigation/native": "^6.0.2",
     "expo": "~51.0.28",
@@ -27,6 +34,7 @@
     "expo-status-bar": "~1.12.1",
     "expo-system-ui": "~3.0.7",
     "expo-web-browser": "~13.0.3",
+    "express": "^4.21.0",
     "firebase": "^10.13.2",
     "firebase-admin": "^12.5.0",
     "nativewind": "^2.0.11",
@@ -38,7 +46,8 @@
     "react-native-reanimated": "~3.10.1",
     "react-native-safe-area-context": "4.10.5",
     "react-native-screens": "3.31.1",
-    "react-native-web": "~0.19.10"
+    "react-native-web": "~0.19.10",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

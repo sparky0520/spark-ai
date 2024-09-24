@@ -26,10 +26,6 @@ export default function ProfileSetupScreen() {
       setError("Please fill in all required fields.");
       return false;
     }
-    if (socialMediaPlatform && !socialMediaLink) {
-      setError("Please provide a link for the social media platform.");
-      return false;
-    }
     return true;
   };
 
