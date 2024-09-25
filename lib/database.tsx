@@ -31,7 +31,7 @@ export const getUser = async (uid: string) => {
 export const createUser = async (uid: string, data: any) => {
   try {
     const userDocRef = doc(usersCollection, uid);
-    await setDoc(userDocRef, data); // Set user data by UID
+    await setDoc(userDocRef, data);
     return userDocRef;
   } catch (error) {
     console.error("Error creating user:", error);
@@ -89,7 +89,7 @@ export const createNewChat = async (uid: string, title: string) => {
     const userDocRef = doc(usersCollection, uid);
 
     const newChat = {
-      content: "", // Chat content (can be expanded later)
+      content: "",
       title: title,
       timestamp: Timestamp.now(),
     };
@@ -98,7 +98,7 @@ export const createNewChat = async (uid: string, title: string) => {
       chats: arrayUnion(newChat),
     });
 
-    return newChat; // Return the new chat object
+    return newChat;
   } catch (error) {
     console.error("Error creating new chat:", error);
     throw new Error("Failed to create new chat");
@@ -183,5 +183,38 @@ export const sendMessage = async (
   } catch (error) {
     console.error("Error sending message:", error);
     throw new Error("Failed to send message");
+  }
+};
+
+// Update an existing chat for a specific user
+export const updateChat = async (
+  email: string,
+  chatIndex: number,
+  newContent: string
+) => {
+  try {
+    const userQuery = query(usersCollection, where("email", "==", email));
+    const querySnapshot = await getDocs(userQuery);
+
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+      const chats = userData.chats || [];
+
+      if (chatIndex >= 0 && chatIndex < chats.length) {
+        chats[chatIndex].content = newContent;
+        chats[chatIndex].timestamp = Timestamp.now();
+
+        await updateDoc(userDoc.ref, { chats: chats });
+        return true;
+      } else {
+        throw new Error("Chat index out of bounds");
+      }
+    } else {
+      throw new Error("User not found");
+    }
+  } catch (error) {
+    console.error("Error updating chat:", error);
+    throw new Error("Failed to update chat");
   }
 };
