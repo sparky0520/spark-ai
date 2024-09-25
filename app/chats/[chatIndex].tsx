@@ -1,4 +1,3 @@
-// screens/ChatScreen.tsx
 import React, { useEffect, useState } from "react";
 import {
   View,
@@ -10,50 +9,69 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeWindStyleSheet } from "nativewind";
 import Icon from "react-native-vector-icons/Feather";
-import { getChatMessages, sendMessage } from "@/lib/database";
+import { getUserDataByEmail, updateChat } from "@/lib/database";
 import { auth } from "@/lib/firebase";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 NativeWindStyleSheet.setOutput({
   default: "native",
 });
 
-const ChatScreen = ({ chatId }) => {
-  console.log(chatId);
-  const [messages, setMessages] = useState([]);
+interface Chat {
+  content: string;
+  timestamp: any; // Use the correct Timestamp type from your Firebase setup
+  title: string;
+}
+
+const ChatScreen = () => {
+  const { chatIndex } = useLocalSearchParams();
+  const [chat, setChat] = useState<Chat | null>(null);
   const [newMessage, setNewMessage] = useState("");
   const router = useRouter();
 
   useEffect(() => {
-    const fetchMessages = async () => {
-      try {
-        const chatMessages = await getChatMessages(
-          auth.currentUser?.uid,
-          chatId
-        );
-        setMessages(chatMessages);
-      } catch (error) {
-        console.error("Error fetching chat messages:", error);
+    const fetchChat = async () => {
+      const user = auth.currentUser;
+      if (user && chatIndex) {
+        const userData = await getUserDataByEmail(user.email as string);
+        const selectedChat = userData?.chats[parseInt(chatIndex as string)];
+        setChat(selectedChat);
       }
     };
 
-    fetchMessages();
-  }, [chatId]);
+    fetchChat();
+  }, [chatIndex]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !chat) return;
 
     try {
       const user = auth.currentUser;
       if (user) {
-        await sendMessage(user.uid, chatId, newMessage);
-        setMessages([...messages, { content: newMessage, senderId: user.uid }]);
+        const updatedContent = chat.content + "\n" + newMessage; // Append new message
+        await updateChat(
+          user.email as string,
+          parseInt(chatIndex as string),
+          updatedContent
+        );
+        setChat((prevChat) => ({
+          ...prevChat!,
+          content: updatedContent,
+        }));
         setNewMessage("");
       }
     } catch (error) {
       console.error("Error sending message:", error);
     }
   };
+
+  if (!chat) {
+    return (
+      <View className="flex-1 justify-center items-center bg-gray-900">
+        <Text className="text-white text-lg">Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-gray-900">
@@ -62,22 +80,13 @@ const ChatScreen = ({ chatId }) => {
           <TouchableOpacity onPress={() => router.back()}>
             <Icon name="arrow-left" size={24} color="#fff" />
           </TouchableOpacity>
-          <Text className="text-white text-lg font-bold">Chat: {chatId}</Text>
+          <Text className="text-white text-lg font-bold">
+            Chat: {chat.title}
+          </Text>
         </View>
 
         <ScrollView className="flex-1 px-4 py-2">
-          {messages.map((message, index) => (
-            <View
-              key={index}
-              className={`${
-                message.senderId === auth.currentUser?.uid
-                  ? "self-end bg-blue-600"
-                  : "self-start bg-gray-800"
-              } p-3 rounded-lg mb-2 max-w-xs`}
-            >
-              <Text className="text-white">{message.content}</Text>
-            </View>
-          ))}
+          <Text className="text-white">{chat.content}</Text>
         </ScrollView>
 
         <View className="p-4 bg-gray-800">

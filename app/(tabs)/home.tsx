@@ -11,11 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { NativeWindStyleSheet } from "nativewind";
 import Icon from "react-native-vector-icons/Feather";
 import { auth } from "@/lib/firebase";
-import {
-  getUserDataByEmail,
-  createNewChat,
-  getPreviousChats,
-} from "@/lib/database";
+import { getUserDataByEmail, createNewChat } from "@/lib/database";
 import { router } from "expo-router";
 import { Timestamp } from "firebase/firestore";
 
@@ -26,18 +22,16 @@ NativeWindStyleSheet.setOutput({
 interface UserData {
   name: string;
   email: string;
-}
-
-interface Chat {
-  content: string;
-  timestamp: Timestamp;
-  title: string;
+  chats: Array<{
+    content: string;
+    timestamp: Timestamp;
+    title: string;
+  }>;
 }
 
 const Home = () => {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [newChatTitle, setNewChatTitle] = useState("");
-  const [previousChats, setPreviousChats] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -49,9 +43,6 @@ const Home = () => {
             user.email as string
           );
           setUserData(fetchedUserData as UserData);
-
-          const fetchedChats = await getPreviousChats(user.uid);
-          setPreviousChats(fetchedChats);
         }
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -64,6 +55,12 @@ const Home = () => {
     fetchData();
   }, []);
 
+  const handleChatClick = (chatIndex: number) => {
+    router.push({
+      pathname: `/chats/[chatIndex]`,
+      params: { chatIndex: chatIndex.toString() },
+    });
+  };
   const handleSignOut = async () => {
     try {
       await auth.signOut();
@@ -78,7 +75,6 @@ const Home = () => {
   const handleProfileClick = () => {
     router.push("/profile");
   };
-
   const handleNewChat = async () => {
     if (!newChatTitle.trim()) {
       Alert.alert("Error", "Please enter a chat title");
@@ -89,17 +85,16 @@ const Home = () => {
       const user = auth.currentUser;
       if (user) {
         const newChat = await createNewChat(user.uid, newChatTitle);
-        setPreviousChats([newChat, ...previousChats]); // Add new chat to the beginning
-        setNewChatTitle(""); // Clear the input after chat creation
+        setUserData((prevData) => ({
+          ...prevData!,
+          chats: [newChat, ...(prevData?.chats || [])],
+        }));
+        setNewChatTitle("");
       }
     } catch (error) {
       console.error("Error creating new chat:", error);
       Alert.alert("Error", "Failed to create new chat. Please try again.");
     }
-  };
-
-  const handleChatClick = (chatTitle: string, timestamp: string) => {
-    router.push(`/chats/${chatTitle}`);
   };
 
   if (loading) {
@@ -131,17 +126,12 @@ const Home = () => {
           <Text className="text-white text-xl font-bold mb-2">
             Previous Chats
           </Text>
-          {previousChats.length > 0 ? (
-            previousChats.reverse().map((chat, index) => (
+          {userData?.chats && userData.chats.length > 0 ? (
+            userData.chats.map((chat, index) => (
               <TouchableOpacity
                 key={index}
                 className="flex-row items-center bg-gray-800 p-3 rounded-lg mb-2"
-                onPress={() =>
-                  handleChatClick(
-                    chat.title,
-                    chat.timestamp.toDate().toISOString()
-                  )
-                }
+                onPress={() => handleChatClick(index)}
               >
                 <Icon name="message-square" size={20} color="#9ca3af" />
                 <View className="ml-2">
