@@ -10,6 +10,7 @@ const RootLayout = () => {
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="chats" options={{ headerShown: false }} />
       </Stack>
       <StatusBar backgroundColor="#161622" style="dark"></StatusBar>
     </>

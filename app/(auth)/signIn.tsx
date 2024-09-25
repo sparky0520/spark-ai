@@ -5,25 +5,30 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
 } from "react-native";
 import { signIn } from "../../lib/authentication";
 import { useRouter } from "expo-router";
 import { FirebaseError } from "firebase/app";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function SignInScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const validateForm = () => {
     if (!email.trim() || !password.trim()) {
-      setError("Please fill in all fields.");
+      Alert.alert("Missing Information", "Please fill in all fields.");
       return false;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setError("Please enter a valid email address.");
+      Alert.alert("Invalid Email", "Please enter a valid email address.");
       return false;
     }
     return true;
@@ -33,7 +38,6 @@ export default function SignInScreen() {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    setError("");
 
     try {
       await signIn(email, password);
@@ -43,16 +47,22 @@ export default function SignInScreen() {
         switch (err.code) {
           case "auth/user-not-found":
           case "auth/wrong-password":
-            setError("Invalid email or password.");
+            Alert.alert("Authentication Failed", "Invalid email or password.");
             break;
           case "auth/too-many-requests":
-            setError("Too many failed attempts. Please try again later.");
+            Alert.alert(
+              "Too Many Attempts",
+              "Too many failed attempts. Please try again later."
+            );
             break;
           default:
-            setError("An error occurred. Please try again.");
+            Alert.alert("Error", "An error occurred. Please try again.");
         }
       } else {
-        setError("An unexpected error occurred. Please try again.");
+        Alert.alert(
+          "Unexpected Error",
+          "An unexpected error occurred. Please try again."
+        );
       }
     } finally {
       setIsLoading(false);
@@ -60,38 +70,84 @@ export default function SignInScreen() {
   };
 
   return (
-    <View className="flex-1 justify-center p-6 bg-white">
-      <Text className="text-3xl font-bold mb-6 text-center">Sign In</Text>
-      <TextInput
-        className="border border-gray-300 p-2 rounded-md mb-4"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-      />
-      <TextInput
-        className="border border-gray-300 p-2 rounded-md mb-4"
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-      />
-      {error ? <Text className="text-red-500 mb-4">{error}</Text> : null}
-      <TouchableOpacity
-        className="bg-blue-500 p-3 rounded-md"
-        onPress={handleSignIn}
-        disabled={isLoading}
+    <SafeAreaView className="flex-1 bg-white">
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1 justify-center p-6"
       >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text className="text-white text-center font-bold">Sign In</Text>
-        )}
-      </TouchableOpacity>
-      <TouchableOpacity className="mt-4" onPress={() => router.push("/signUp")}>
-        <Text className="text-blue-500 text-center">Create Account</Text>
-      </TouchableOpacity>
-    </View>
+        <Text className="text-3xl font-bold mb-8 text-center text-blue-600">
+          Welcome Back
+        </Text>
+        <View className="mb-4">
+          <Text className="text-sm font-medium text-gray-700 mb-1">Email</Text>
+          <TextInput
+            className="border border-gray-300 p-3 rounded-md bg-gray-50"
+            placeholder="Enter your email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
+            accessibilityLabel="Email input"
+          />
+        </View>
+        <View className="mb-6">
+          <Text className="text-sm font-medium text-gray-700 mb-1">
+            Password
+          </Text>
+          <View className="relative">
+            <TextInput
+              className="border border-gray-300 p-3 rounded-md bg-gray-50 pr-10"
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              textContentType="password"
+              accessibilityLabel="Password input"
+            />
+            <TouchableOpacity
+              className="absolute right-3 top-3"
+              onPress={() => setShowPassword(!showPassword)}
+              accessibilityLabel={
+                showPassword ? "Hide password" : "Show password"
+              }
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={24}
+                color="gray"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <TouchableOpacity
+          className={`p-3 rounded-md ${
+            isLoading ? "bg-blue-400" : "bg-blue-600"
+          }`}
+          onPress={handleSignIn}
+          disabled={isLoading}
+          accessibilityLabel="Sign in button"
+          accessibilityState={{ disabled: isLoading }}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white text-center font-bold text-lg">
+              Sign In
+            </Text>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          className="mt-4"
+          onPress={() => router.push("/signUp")}
+          accessibilityLabel="Create account button"
+        >
+          <Text className="text-blue-600 text-center">
+            Don't have an account? Create one
+          </Text>
+        </TouchableOpacity>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }

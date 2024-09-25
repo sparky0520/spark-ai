@@ -1,5 +1,11 @@
+import { useState, useEffect } from "react";
 import { initializeApp } from "firebase/app";
-import { initializeAuth, getReactNativePersistence } from "firebase/auth";
+import {
+  initializeAuth,
+  getReactNativePersistence,
+  onAuthStateChanged,
+  User,
+} from "firebase/auth";
 import ReactNativeAsyncStorage from "@react-native-async-storage/async-storage";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
@@ -24,5 +30,23 @@ const auth = initializeAuth(app, {
 
 const firestore = getFirestore(app);
 const storage = getStorage(app);
+
+// Custom hook for Firebase Auth state
+export const useAuthState = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  return { user, loading };
+};
 
 export { auth, firestore, storage };
