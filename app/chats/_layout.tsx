@@ -5,7 +5,7 @@ import { Stack } from "expo-router";
 const ChatLayout = () => {
   return (
     <Stack>
-      <Stack.Screen name="[chatId]" options={{ headerShown: false }} />
+      <Stack.Screen name="[chatIndex]" options={{ headerShown: false }} />
     </Stack>
   );
 };
