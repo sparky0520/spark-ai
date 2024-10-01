@@ -187,11 +187,7 @@ export const sendMessage = async (
 };
 
 // Update an existing chat for a specific user
-export const updateChat = async (
-  email: string,
-  chatIndex: number,
-  newContent: string
-) => {
+export const updateChat = async (email, chatIndex, newContent) => {
   try {
     const userQuery = query(usersCollection, where("email", "==", email));
     const querySnapshot = await getDocs(userQuery);
